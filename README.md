@@ -7,6 +7,8 @@ This repo is the first deliverable for Phase 1 of the voice-agent roadmap. It in
 - FastAPI backend for local serving
 - Browser voice demo using the microphone and speech synthesis
 - Mock support-agent responses for order status, returns, and product questions
+- Separate support-brain policy layer with deterministic routing logic
+- Mock latency pipeline that timestamps STT, LLM and TTS stages for a baseline
 - SQLite table for trace persistence (`data/voice_traces.db`)
 - `.env.example` for provider and environment configuration
 
@@ -32,8 +34,21 @@ This repo is the first deliverable for Phase 1 of the voice-agent roadmap. It in
 - Real STT/TTS providers are configured via environment variables in `.env.example` and are ready for Phase 2.
 - Every turn writes a trace entry to SQLite with the transcript and reply.
 
-## Phase 1 acceptance criteria
+## Latency pipeline smoke test
+
+The mock pipeline exposes per-stage timings so the project is ready for the real latency work in later phases.
+
+```powershell
+.
+\.venv\Scripts\Activate.ps1
+python scripts\baseline_latency.py
+```
+
+This prints a basic stage summary for STT, LLM, and TTS, with a total latency value for each sample turn.
+
+## Phase 1 and 2 acceptance criteria
 
 - Browser voice call loop is available.
 - Trace rows are created for each user request.
-- Project is ready for the next phase: support-brain tooling and real pipeline wiring.
+- Support brain handles order, return, product, and escalation intents.
+- The pipeline exposes stage-level timing data for a baseline latency table.
