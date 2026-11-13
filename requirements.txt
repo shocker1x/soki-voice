@@ -3,8 +3,7 @@ uvicorn[standard]==0.34.0
 python-dotenv==1.0.1
 pydantic==2.10.6
 pytest==8.4.1
-
-# Optional real-pipeline dependencies for Phase 1+; installed later as needed.
-# livekit-agents==1.8.11
-# deepgram-sdk==7.18.0
-# cartesia==4.2.0
+livekit-agents==1.8.11
+livekit-plugins-deepgram==1.8.11
+livekit-plugins-cartesia==1.8.11
+livekit-plugins-anthropic==1.8.11

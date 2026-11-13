@@ -52,3 +52,23 @@ This prints a basic stage summary for STT, LLM, and TTS, with a total latency va
 - Trace rows are created for each user request.
 - Support brain handles order, return, product, and escalation intents.
 - The pipeline exposes stage-level timing data for a baseline latency table.
+
+## LiveKit worker
+
+The browser demo stays in mock mode. The separate LiveKit worker uses Deepgram Nova-3 for STT, Anthropic Claude 3.5 Haiku for the LLM, and Cartesia Sonic-3 for TTS. Its support tool calls the same `SupportBrain` policy and writes handled requests to the SQLite trace store.
+
+Set `VOICE_MOCK_MODE=false` and provide `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `DEEPGRAM_API_KEY`, `ANTHROPIC_API_KEY`, and `CARTESIA_API_KEY` in `.env`. Then start the worker in a separate terminal:
+
+```powershell
+Copy-Item .env.example .env
+# Edit .env and add your provider credentials, then:
+python -m app.livekit_worker dev
+```
+
+Use the LiveKit Agent Console to create a room and test the worker. The existing browser demo does not yet join LiveKit rooms; it continues to use browser speech recognition and speech synthesis through `/api/voice/mock`.
+
+Check runtime readiness from FastAPI:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/runtime/status
+```

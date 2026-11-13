@@ -8,12 +8,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.brain import SupportBrain
-from app.config import settings
 from app.trace import list_recent_traces, record_trace
+from app.voice_runtime import VoiceRuntime
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 brain = SupportBrain()
+voice_runtime = VoiceRuntime(brain=brain)
 
 app = FastAPI(title="Soki Voice Demo", version="0.1.0")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -31,7 +32,7 @@ class VoiceResponse(BaseModel):
 
 
 def build_reply(transcript: str) -> str:
-    result = brain.respond(transcript)
+    result = voice_runtime.respond(transcript)
     return result["reply"]
 
 
@@ -41,8 +42,28 @@ async def serve_index() -> FileResponse:
 
 
 @app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok", "mode": "mock" if settings.voice_mock_mode else "configured"}
+async def health() -> dict[str, object]:
+    return {
+        "status": "ok",
+        "mode": "mock",
+        "livekit_ready": voice_runtime.is_livekit_ready,
+        "deepgram_ready": voice_runtime.deepgram_ready,
+        "cartesia_ready": voice_runtime.cartesia_ready,
+        "anthropic_ready": voice_runtime.anthropic_ready,
+    }
+
+
+@app.get("/api/runtime/status")
+async def runtime_status() -> dict[str, object]:
+    return {
+        "browser_mode": "mock",
+        "worker_mode": voice_runtime.runtime_mode,
+        "livekit_ready": voice_runtime.is_livekit_ready,
+        "deepgram_ready": voice_runtime.deepgram_ready,
+        "cartesia_ready": voice_runtime.cartesia_ready,
+        "anthropic_ready": voice_runtime.anthropic_ready,
+        "worker_command": "python -m app.livekit_worker dev",
+    }
 
 
 @app.get("/api/traces")
@@ -50,22 +71,31 @@ async def fetch_traces() -> list[dict[str, object]]:
     return list_recent_traces(limit=20)
 
 
-@app.post("/api/voice/mock", response_model=VoiceResponse)
-async def mock_voice_turn(payload: VoiceRequest) -> VoiceResponse:
+async def _handle_turn(payload: VoiceRequest, mode: str) -> VoiceResponse:
     transcript = payload.transcript.strip()
     if not transcript:
         raise HTTPException(status_code=400, detail="A transcript is required.")
 
-    response = brain.respond(transcript)
-    reply = response["reply"]
+    response = voice_runtime.respond(transcript)
     trace = record_trace(
         source=payload.mode,
         status="ok",
         transcript=transcript,
-        reply=reply,
-        metadata={"mode": "mock", "provider": "local-demo", "tool": response["tool"], "escalate_to_human": response["escalate_to_human"]},
+        reply=response["reply"],
+        metadata={
+            "mode": mode,
+            "provider": response["provider"],
+            "tool": response["tool"],
+            "escalate_to_human": response["escalate_to_human"],
+            **response["metadata"],
+        },
     )
-    return VoiceResponse(transcript=transcript, reply=reply, trace_id=trace["id"])
+    return VoiceResponse(transcript=transcript, reply=response["reply"], trace_id=trace["id"])
+
+
+@app.post("/api/voice/mock", response_model=VoiceResponse)
+async def mock_voice_turn(payload: VoiceRequest) -> VoiceResponse:
+    return await _handle_turn(payload, mode="mock")
 
 
 if __name__ == "__main__":
