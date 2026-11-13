@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soki Voice Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        margin: 0;
+        padding: 2rem;
+      }
+      .panel {
+        max-width: 760px;
+        margin: 0 auto;
+        background: #111827;
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 2rem;
+      }
+      h1 {
+        margin-top: 0;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        border-radius: 10px;
+        border: 1px solid #475569;
+        background: #020617;
+        color: #e2e8f0;
+        padding: 1rem;
+        box-sizing: border-box;
+      }
+      button {
+        margin-top: 1rem;
+        background: #22c55e;
+        color: #052e16;
+        border: none;
+        padding: 0.8rem 1.2rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      button.secondary {
+        background: #38bdf8;
+        color: #082f49;
+      }
+      .log {
+        margin-top: 1.5rem;
+        border-top: 1px solid #334155;
+        padding-top: 1rem;
+      }
+      .log-item {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel">
+      <h1>Soki Voice Agent</h1>
+      <p>Speak or type a phrase to trigger the mock support agent.</p>
+
+      <button id="micButton" class="secondary">Start microphone</button>
+      <button id="sendButton">Send typed message</button>
+
+      <textarea id="userInput" placeholder="Say: order status, return, or product details..."></textarea>
+
+      <div class="log">
+        <strong>Recent traces</strong>
+        <div id="traceList"></div>
+      </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

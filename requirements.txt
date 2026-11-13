@@ -1,0 +1,9 @@
+fastapi==0.162.5
+uvicorn[standard]==0.34.0
+python-dotenv==1.0.1
+pydantic==2.10.6
+
+# Optional real-pipeline dependencies for Phase 1+; installed later as needed.
+# livekit-agents==1.8.11
+# deepgram-sdk==7.18.0
+# cartesia==4.2.0
