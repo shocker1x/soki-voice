@@ -7,11 +7,13 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from app.brain import SupportBrain
 from app.config import settings
 from app.trace import list_recent_traces, record_trace
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+brain = SupportBrain()
 
 app = FastAPI(title="Soki Voice Demo", version="0.1.0")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -29,20 +31,8 @@ class VoiceResponse(BaseModel):
 
 
 def build_reply(transcript: str) -> str:
-    normalized = transcript.strip()
-    if not normalized:
-        return "I didn’t catch that. Please say your order number or ask about returns."
-
-    lower = normalized.lower()
-    if "order" in lower and ("status" in lower or "track" in lower):
-        return "I can help with your order. Please give me the order number or the email used at checkout."
-    if "return" in lower or "refund" in lower:
-        return "Returns are handled after review. I can start a return request if you share the order number."
-    if "rug" in lower or "product" in lower:
-        return "Our handmade rugs are available in wool, cotton, and vintage styles. Tell me the room size or style you want."
-    if "hello" in lower or "hi" in lower:
-        return "Hi. I can help with order status, returns, and product questions."
-    return "I heard you. I can help with order status, returns, product questions, or human escalation."
+    result = brain.respond(transcript)
+    return result["reply"]
 
 
 @app.get("/")
@@ -66,13 +56,14 @@ async def mock_voice_turn(payload: VoiceRequest) -> VoiceResponse:
     if not transcript:
         raise HTTPException(status_code=400, detail="A transcript is required.")
 
-    reply = build_reply(transcript)
+    response = brain.respond(transcript)
+    reply = response["reply"]
     trace = record_trace(
         source=payload.mode,
         status="ok",
         transcript=transcript,
         reply=reply,
-        metadata={"mode": "mock", "provider": "local-demo"},
+        metadata={"mode": "mock", "provider": "local-demo", "tool": response["tool"], "escalate_to_human": response["escalate_to_human"]},
     )
     return VoiceResponse(transcript=transcript, reply=reply, trace_id=trace["id"])
 

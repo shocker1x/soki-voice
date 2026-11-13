@@ -2,6 +2,7 @@ fastapi==0.162.5
 uvicorn[standard]==0.34.0
 python-dotenv==1.0.1
 pydantic==2.10.6
+pytest==8.4.1
 
 # Optional real-pipeline dependencies for Phase 1+; installed later as needed.
 # livekit-agents==1.8.11
